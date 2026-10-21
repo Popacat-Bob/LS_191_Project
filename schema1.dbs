@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="EasyLV PostgreSQL" database="PostgreSQL" id="6fbcaae2-f2d2-4712-bff0-cc7656bb7aa2" >
+	<schema name="easylv" options="easylv;" >
+		<table name="activity_logs" spec="" >
+			<column name="log_id" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="adminid" type="bigint" />
+			<column name="event_id" type="bigint" />
+			<column name="action" type="text" mandatory="y" />
+			<column name="target_type" type="text" mandatory="y" />
+			<column name="target_id" type="text" mandatory="y" />
+			<column name="old_values" type="jsonb" />
+			<column name="new_values" type="jsonb" />
+			<column name="reason" type="text" />
+			<column name="created_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="activity_logs_pk" unique="PRIMARY_KEY" >
+				<column name="log_id" />
+			</index>
+			<index name="activity_time_idx" unique="NORMAL" >
+				<column name="created_at" />
+			</index>
+			<index name="activity_target_idx" unique="NORMAL" >
+				<column name="target_type" />
+				<column name="target_id" />
+				<column name="created_at" />
+			</index>
+			<index name="activity_logs_adminid_idx" unique="NORMAL" >
+				<column name="adminid" />
+			</index>
+			<index name="activity_logs_event_id_idx" unique="NORMAL" >
+				<column name="event_id" />
+			</index>
+			<fk name="activity_logs_adminid_fk" to_schema="easylv" to_table="admin" delete_action="restrict" options="" >
+				<fk_column name="adminid" pk="adminid" />
+			</fk>
+		</table>
+		<table name="admin" spec="" >
+			<column name="adminid" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="name" type="text" mandatory="y" />
+			<column name="role" type="text" mandatory="y" />
+			<column name="email" type="text" mandatory="y" />
+			<column name="password_hash" type="text" mandatory="y" />
+			<column name="is_active" type="boolean" mandatory="y" >
+				<defo><![CDATA[true]]></defo>
+			</column>
+			<column name="created_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="admin_pk" unique="PRIMARY_KEY" >
+				<column name="adminid" />
+			</index>
+			<index name="admin_uq_1" unique="UNIQUE_KEY" >
+				<column name="email" />
+			</index>
+		</table>
+		<table name="admin_permission" spec="" >
+			<column name="adminid" type="bigint" mandatory="y" />
+			<column name="permissionid" type="bigint" mandatory="y" />
+			<column name="granted_by" type="bigint" />
+			<column name="granted_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="admin_permission_pk" unique="PRIMARY_KEY" >
+				<column name="adminid" />
+				<column name="permissionid" />
+			</index>
+			<index name="admin_permission_permissionid_idx" unique="NORMAL" >
+				<column name="permissionid" />
+			</index>
+			<index name="admin_permission_granted_by_idx" unique="NORMAL" >
+				<column name="granted_by" />
+			</index>
+			<fk name="admin_permission_adminid_fk" to_schema="easylv" to_table="admin" delete_action="restrict" options="" >
+				<fk_column name="adminid" pk="adminid" />
+			</fk>
+			<fk name="admin_permission_permissionid_fk" to_schema="easylv" to_table="permission" delete_action="restrict" options="" >
+				<fk_column name="permissionid" pk="permissionid" />
+			</fk>
+			<fk name="admin_permission_granted_by_fk" to_schema="easylv" to_table="admin" delete_action="restrict" options="" >
+				<fk_column name="granted_by" pk="adminid" />
+			</fk>
+		</table>
+		<table name="customers" spec="" >
+			<column name="customerid" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="name" type="text" mandatory="y" />
+			<column name="address" type="text" />
+			<column name="number" type="text" />
+			<column name="email" type="text" />
+			<column name="facebook_page_id" type="text" />
+			<column name="facebook_account_ref" type="text" />
+			<column name="created_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="customers_pk" unique="PRIMARY_KEY" >
+				<column name="customerid" />
+			</index>
+			<index name="customers_uq_1" unique="UNIQUE_KEY" >
+				<column name="facebook_page_id" />
+				<column name="facebook_account_ref" />
+			</index>
+			<constraint name="customers_ck_1" type="CHECK" options="" >
+				<string><![CDATA[(facebook_page_id IS NULL) = (facebook_account_ref IS NULL)]]></string>
+			</constraint>
+		</table>
+		<table name="inventory_items" spec="" >
+			<column name="item_id" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="mining_code" type="text" mandatory="y" />
+			<column name="name" type="text" mandatory="y" />
+			<column name="description" type="text" />
+			<column name="selling_price" type="numeric" length="12" decimal="2" mandatory="y" />
+			<column name="unit_cost" type="numeric" length="12" decimal="2" mandatory="y" />
+			<column name="in_stock" prior="stock_qty" type="boolean" mandatory="y" >
+				<defo><![CDATA[0]]></defo>
+			</column>
+			<column name="is_active" type="boolean" mandatory="y" >
+				<defo><![CDATA[true]]></defo>
+			</column>
+			<column name="updated_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="inventory_items_pk" unique="PRIMARY_KEY" >
+				<column name="item_id" />
+			</index>
+			<index name="inventory_items_uq_1" unique="UNIQUE_KEY" >
+				<column name="mining_code" />
+			</index>
+			<constraint name="inventory_items_ck_1" type="CHECK" options="" >
+				<string><![CDATA[selling_price >= 0]]></string>
+			</constraint>
+			<constraint name="inventory_items_ck_2" type="CHECK" options="" >
+				<string><![CDATA[unit_cost >= 0]]></string>
+			</constraint>
+			<constraint name="inventory_items_ck_3" type="CHECK" options="" >
+				<string><![CDATA[stock_qty >= 0]]></string>
+			</constraint>
+		</table>
+		<table name="order_items" spec="" >
+			<column name="order_item_id" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="order_id" type="bigint" mandatory="y" />
+			<column name="item_id" type="bigint" mandatory="y" />
+			<column name="description" type="text" mandatory="y" />
+			<column name="unit_price" type="numeric" length="12" decimal="2" mandatory="y" />
+			<column name="status" type="text" mandatory="y" >
+				<defo><![CDATA['active']]></defo>
+			</column>
+			<column name="created_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="order_items_pk" unique="PRIMARY_KEY" >
+				<column name="order_item_id" />
+			</index>
+			<index name="order_items_order_id_idx" unique="NORMAL" >
+				<column name="order_id" />
+			</index>
+			<index name="order_items_item_id_idx" unique="NORMAL" >
+				<column name="item_id" />
+			</index>
+			<constraint name="order_items_ck_1" type="CHECK" options="" >
+				<string><![CDATA[quantity > 0]]></string>
+			</constraint>
+			<constraint name="order_items_ck_2" type="CHECK" options="" >
+				<string><![CDATA[unit_price >= 0]]></string>
+			</constraint>
+			<constraint name="order_items_ck_3" type="CHECK" options="" >
+				<string><![CDATA[status IN ('active','cancelled')]]></string>
+			</constraint>
+			<fk name="order_items_order_id_fk" to_schema="easylv" to_table="orders" delete_action="restrict" options="" >
+				<fk_column name="order_id" pk="order_id" />
+			</fk>
+			<fk name="order_items_item_id_fk" to_schema="easylv" to_table="inventory_items" delete_action="restrict" options="" >
+				<fk_column name="item_id" pk="item_id" />
+			</fk>
+		</table>
+		<table name="orders" spec="" >
+			<column name="order_id" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="customerid" type="bigint" mandatory="y" />
+			<column name="session_id" type="bigint" />
+			<column name="processed_by" type="bigint" />
+			<column name="order_status" type="text" mandatory="y" >
+				<defo><![CDATA['open']]></defo>
+			</column>
+			<column name="payment_status" type="text" mandatory="y" >
+				<defo><![CDATA['unpaid']]></defo>
+			</column>
+			<column name="fulfillment_status" type="text" mandatory="y" >
+				<defo><![CDATA['unfulfilled']]></defo>
+			</column>
+			<column name="payment_method" type="text" />
+			<column name="recipient_name" type="text" />
+			<column name="recipient_number" type="text" />
+			<column name="shipping_address" type="text" />
+			<column name="tracking_number" type="text" />
+			<column name="order_date" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<column name="updated_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<index name="orders_pk" unique="PRIMARY_KEY" >
+				<column name="order_id" />
+			</index>
+			<index name="one_open_order_per_session" unique="UNIQUE_INDEX" options="WHERE order_status = &#039;open&#039; AND session_id IS NOT NULL" >
+				<column name="customerid" />
+				<column name="session_id" />
+			</index>
+			<index name="orders_status_idx" unique="NORMAL" >
+				<column name="order_status" />
+				<column name="payment_status" />
+				<column name="fulfillment_status" />
+			</index>
+			<index name="orders_customer_date_idx" unique="NORMAL" >
+				<column name="customerid" />
+				<column name="order_date" />
+			</index>
+			<index name="orders_session_id_idx" unique="NORMAL" >
+				<column name="session_id" />
+			</index>
+			<index name="orders_processed_by_idx" unique="NORMAL" >
+				<column name="processed_by" />
+			</index>
+			<constraint name="orders_ck_1" type="CHECK" options="" >
+				<string><![CDATA[order_status IN ('open','confirmed','completed','cancelled')]]></string>
+			</constraint>
+			<constraint name="orders_ck_2" type="CHECK" options="" >
+				<string><![CDATA[payment_status IN ('unpaid','paid','review')]]></string>
+			</constraint>
+			<constraint name="orders_ck_3" type="CHECK" options="" >
+				<string><![CDATA[fulfillment_status IN ('unfulfilled','packing','packaged','shipped','delivered','cancelled')]]></string>
+			</constraint>
+			<fk name="orders_customerid_fk" to_schema="easylv" to_table="customers" delete_action="restrict" options="" >
+				<fk_column name="customerid" pk="customerid" />
+			</fk>
+			<fk name="orders_processed_by_fk" to_schema="easylv" to_table="admin" delete_action="restrict" options="" >
+				<fk_column name="processed_by" pk="adminid" />
+			</fk>
+		</table>
+		<table name="permission" spec="" >
+			<column name="permissionid" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="name" type="text" mandatory="y" />
+			<column name="description" type="text" />
+			<index name="permission_pk" unique="PRIMARY_KEY" >
+				<column name="permissionid" />
+			</index>
+			<index name="permission_uq_1" unique="UNIQUE_KEY" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="reservations" spec="" >
+			<column name="reservation_id" type="bigint" mandatory="y" >
+				<identity><![CDATA[GENERATED  BY DEFAULT AS IDENTITY]]></identity>
+			</column>
+			<column name="order_item_id" type="bigint" mandatory="y" />
+			<column name="source_comment_id" type="bigint" />
+			<column name="quantity" type="integer" mandatory="y" />
+			<column name="status" type="text" mandatory="y" >
+				<defo><![CDATA['active']]></defo>
+			</column>
+			<column name="payment_deadline" type="timestamptz" mandatory="y" />
+			<column name="created_at" type="timestamptz" mandatory="y" >
+				<defo><![CDATA[CURRENT_TIMESTAMP]]></defo>
+			</column>
+			<column name="ended_at" type="timestamptz" />
+			<column name="ended_by" type="bigint" />
+			<column name="end_reason" type="text" />
+			<index name="reservations_pk" unique="PRIMARY_KEY" >
+				<column name="reservation_id" />
+			</index>
+			<index name="one_active_reservation_per_line" unique="UNIQUE_INDEX" options="WHERE status = &#039;active&#039;" >
+				<column name="order_item_id" />
+			</index>
+			<index name="reservation_deadline_idx" unique="NORMAL" options="WHERE status = &#039;active&#039;" >
+				<column name="payment_deadline" />
+			</index>
+			<index name="reservations_order_item_id_idx" unique="NORMAL" >
+				<column name="order_item_id" />
+			</index>
+			<index name="reservations_source_comment_id_idx" unique="NORMAL" >
+				<column name="source_comment_id" />
+			</index>
+			<index name="reservations_ended_by_idx" unique="NORMAL" >
+				<column name="ended_by" />
+			</index>
+			<constraint name="reservations_ck_1" type="CHECK" options="" >
+				<string><![CDATA[quantity > 0]]></string>
+			</constraint>
+			<constraint name="reservations_ck_2" type="CHECK" options="" >
+				<string><![CDATA[status IN ('active','fulfilled','expired','released')]]></string>
+			</constraint>
+			<constraint name="reservations_ck_3" type="CHECK" options="" >
+				<string><![CDATA[payment_deadline > created_at]]></string>
+			</constraint>
+			<constraint name="reservations_ck_4" type="CHECK" options="" >
+				<string><![CDATA[(status = 'active' AND ended_at IS NULL) OR (status <> 'active' AND ended_at IS NOT NULL)]]></string>
+			</constraint>
+			<constraint name="reservations_ck_5" type="CHECK" options="" >
+				<string><![CDATA[ended_at IS NULL OR ended_at >= created_at]]></string>
+			</constraint>
+			<fk name="reservations_order_item_id_fk" to_schema="easylv" to_table="order_items" delete_action="restrict" options="" >
+				<fk_column name="order_item_id" pk="order_item_id" />
+			</fk>
+			<fk name="reservations_ended_by_fk" to_schema="easylv" to_table="admin" delete_action="restrict" options="" >
+				<fk_column name="ended_by" pk="adminid" />
+			</fk>
+		</table>
+	</schema>
+	<diagram_group name="Default" id="6a7d715f-3b7b-45ac-8074-abc4c2d3b3fb" >
+		<diagram name="01 Core - Orders and Inventory" id="c404a532-ecc1-4226-85ec-8ce548433e95" joined_routing="y" show_column_type="y" show_relation="columns" >
+			<entity schema="easylv" name="customers" color="C1D8EE" x="57" y="57" />
+			<entity schema="easylv" name="inventory_items" color="C1D8EE" x="418" y="57" />
+			<entity schema="easylv" name="order_items" color="C1D8EE" x="57" y="418" />
+			<entity schema="easylv" name="orders" color="C1D8EE" x="798" y="57" />
+			<entity schema="easylv" name="reservations" color="C1D8EE" x="399" y="437" />
+		</diagram>
+		<diagram name="02 Admin Permissions" id="6b8e3a15-705a-4911-b2d2-46d8d88622fb" joined_routing="y" show_column_type="y" show_relation="columns" >
+			<entity schema="easylv" name="activity_logs" color="D0E8D5" x="399" y="57" />
+			<entity schema="easylv" name="admin" color="D0E8D5" x="57" y="323" />
+			<entity schema="easylv" name="admin_permission" color="D0E8D5" x="741" y="57" />
+			<entity schema="easylv" name="permission" color="D0E8D5" x="95" y="57" />
+		</diagram>
+	</diagram_group>
+</project>
