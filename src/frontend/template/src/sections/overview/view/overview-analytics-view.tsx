@@ -7,6 +7,7 @@ import { _posts, _tasks, _traffic, _timeline } from 'src/_mock';
 import { AnalyticsNews } from '../analytics-news';
 import { AnalyticsTasks } from '../analytics-tasks';
 import { StatusCard } from '../analytics-status-card';
+import { AnalyticsPieChart } from '../analytics-pie-chart';
 import { AnalyticsCurrentVisits } from '../analytics-current-visits';
 import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
 import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
@@ -72,7 +73,7 @@ export function OverviewAnalyticsView() {
           />
         </Grid>
 
-        <Grid size={12}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <AnalyticsSalesChart
             metrics={[
               {
@@ -85,6 +86,18 @@ export function OverviewAnalyticsView() {
                 label: 'Visits',
                 data: { day: visitsData, week: visitsData, month: visitsData, year: visitsData },
               },
+            ]}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <AnalyticsPieChart
+            title="Top Sale Categories"
+            subheader="Share of top-selling categories"
+            sections={[
+              { label: 'Dresses', value: 62 },
+              { label: 'Rompers', value: 18 },
+              { label: 'Shirts', value: 20 },
             ]}
           />
         </Grid>

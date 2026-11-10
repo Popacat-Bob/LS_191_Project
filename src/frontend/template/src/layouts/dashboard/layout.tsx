@@ -74,21 +74,21 @@ export function DashboardLayout({
           <NavMobile data={navData} open={open} onClose={onClose} workspaces={_workspaces} />
         </>
       ),
-      rightArea: (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
-          {/** @slot Searchbar */}
-          <Searchbar />
+      // rightArea: (
+      //   <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
+      //     {/** @slot Searchbar */}
+      //     <Searchbar />
 
-          {/** @slot Language popover */}
-          <LanguagePopover data={_langs} />
+      //     {/** @slot Language popover */}
+      //     <LanguagePopover data={_langs} />
 
-          {/** @slot Notifications popover */}
-          <NotificationsPopover data={_notifications} />
+      //     {/** @slot Notifications popover */}
+      //     <NotificationsPopover data={_notifications} />
 
-          {/** @slot Account drawer */}
-          <AccountPopover data={_account} />
-        </Box>
-      ),
+      //     {/** @slot Account drawer */}
+      //     <AccountPopover data={_account} />
+      //   </Box>
+      // ),
     };
 
     return (
