@@ -1,0 +1,95 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-easylv}
+      POSTGRES_USER: ${POSTGRES_USER:-easylv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env first}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    profiles: ["full"]
+    build: .
+    command:
+      [
+        "uv",
+        "run",
+        "gunicorn",
+        "easylv.wsgi:application",
+        "--bind",
+        "0.0.0.0:8000",
+      ]
+    environment: &app_environment
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Copy .env.example to .env first}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DATABASE_URL: postgres://${POSTGRES_USER:-easylv}:${POSTGRES_PASSWORD:?Copy .env.example to .env first}@db:5432/${POSTGRES_DB:-easylv}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      COMMENT_SOURCE: ${COMMENT_SOURCE:-simulated}
+      MESSAGE_SENDER: ${MESSAGE_SENDER:-console}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-fake}
+      INVOICE_DELAY_SECONDS: ${INVOICE_DELAY_SECONDS:-0}
+      INVOICE_RECONCILIATION_INTERVAL_SECONDS: ${INVOICE_RECONCILIATION_INTERVAL_SECONDS:-30}
+      INVOICE_RECONCILIATION_GRACE_SECONDS: ${INVOICE_RECONCILIATION_GRACE_SECONDS:-60}
+      CELERY_VISIBILITY_TIMEOUT: ${CELERY_VISIBILITY_TIMEOUT:-0}
+      FB_APP_SECRET: ${FB_APP_SECRET:-}
+      FB_PAGE_ACCESS_TOKEN: ${FB_PAGE_ACCESS_TOKEN:-}
+      FB_VERIFY_TOKEN: ${FB_VERIFY_TOKEN:-}
+      PAYMONGO_SECRET_KEY: ${PAYMONGO_SECRET_KEY:-}
+      MINING_PATTERN: ${MINING_PATTERN:-^\s*(?:mine\s*)?([a-z0-9][a-z0-9-]*)\s*$}
+      PAYMENT_WINDOW_HOURS: ${PAYMENT_WINDOW_HOURS:-24}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    profiles: ["full"]
+    build: .
+    command: ["uv", "run", "celery", "-A", "easylv", "worker", "--loglevel=INFO"]
+    environment: *app_environment
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    profiles: ["full"]
+    build: .
+    command: ["uv", "run", "celery", "-A", "easylv", "beat", "--loglevel=INFO"]
+    environment: *app_environment
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
